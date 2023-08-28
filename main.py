@@ -1,11 +1,10 @@
 import cv2 as cv
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.optimize import minimize
 
 class Image():
     def __init__(self):
-        image = cv.imread('hair2.png', cv.IMREAD_COLOR)
+        image = cv.imread('images/4.png', cv.IMREAD_COLOR)
         self.image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
         self.brightness_center = Point()
 
@@ -25,7 +24,7 @@ class Image():
         maior_contorno = max(contornos, key=cv.contourArea)
         momentos = cv.moments(maior_contorno)
         self.brightness_center.x = int(momentos['m10'] / momentos['m00'])
-        self.brightness_center.y = int(momentos['m01'] / momentos['m00'])
+        self.brightness_center.y = int(momentos['m01'] / momentos['m00'])        
         self.largest_contour = maior_contorno
         
     def erode(self):
@@ -33,14 +32,6 @@ class Image():
         eroded = cv.erode(self.image, kernel, iterations=1)
         eroded = cv.cvtColor(eroded, cv.COLOR_GRAY2BGR)
         self.image = eroded
-        
-    def crop_util_area(self):
-        x, y, w, h = cv.boundingRect(self.largest_contour)
-        rectangular_mask = np.zeros_like(self.image)
-        cv.drawContours(rectangular_mask, [self.largest_contour], 0, (255, 255, 255), -1)
-        cropped = cv.bitwise_and(self.image, rectangular_mask)
-        cropped = cropped[y:y+h, x:x+w]
-        self.image = cropped
         
     def get_contours(self):
         bordas = cv.Canny(self.image, threshold1=100, threshold2=200)
@@ -73,6 +64,28 @@ class Image():
         plt.imshow(self.image)
         plt.show()
         
+    def find_bigger_square(self):
+        mask = np.zeros_like(self.image)
+        cv.drawContours(mask, [self.largest_contour], 0, (255, 255, 255), thickness=cv.FILLED)
+        filled_contour = cv.addWeighted(self.image, 1, mask, 0.5, 0)
+        center_x, center_y = self.brightness_center.x, self.brightness_center.y
+        
+        for i in range(0, filled_contour.shape[0]):
+            x = center_x - i
+            y = center_y - i
+            w = 2 * i
+            h = 2 * i
+            roi = filled_contour[y:y+h, x:x+w]
+            black_pixels = np.count_nonzero(roi == 0)
+            
+            if black_pixels > 0:
+                cv.rectangle(self.image, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                plt.imshow(self.image)
+                plt.show()
+                self.image = self.image[y:y+h, x:x+w]
+                
+                break
+        
 class Point():
     def __init__(self, x=0, y=0):
         self.x = x
@@ -84,9 +97,9 @@ def main():
     image.threshold()
     image.get_brightness_center()
     image.erode()
-    image.crop_util_area()
+    image.find_bigger_square()
     image.get_contours()
-    image.count_hair()
+    image.count_hair()    
     image.resize(0.5)
     image.show()
     pass
