@@ -13,7 +13,7 @@ class HairCounter():
         self.image = gamma_corrected
         
     def threshold(self):
-        _, thresh = cv.threshold(self.image, 190, 255, cv.THRESH_BINARY)
+        thresh = cv.threshold(self.image, 150, 255, cv.THRESH_TOZERO)[1]
         self.image = thresh
         
     def get_brightness_center(self):
@@ -87,6 +87,13 @@ class HairCounter():
                     'y2': y + h
                 }
                 break
+            
+        self.used_area = {
+            'x1': 0,
+            'y1': 0,
+            'x2': self.image.shape[1],
+            'y2': self.image.shape[0]
+        }
     
     def run(self):
         self.gama_correction(0.5)
