@@ -1,7 +1,7 @@
 import cv2 as cv
 import numpy as np
 import matplotlib.pyplot as plt
-
+import math
 class HairCounter():
     def __init__(self, image):
         self.image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
@@ -38,7 +38,8 @@ class HairCounter():
         self.contours = contornos
         
     def count_hair(self):
-        quantidade_fios = 0
+        areas = []
+        
         for _, contorno in enumerate(self.contours):
             area = cv.contourArea(contorno)
             if area > 0:
@@ -49,11 +50,22 @@ class HairCounter():
                 cv.drawContours(self.image, [contorno], -1, (0, 255, 0), 2)
                 cv.putText(self.image, f"{area:.2f}", (centro_x, centro_y), cv.FONT_ITALIC, 0.2, (0, 0, 255), 1)
                 
-                if area > 200:
-                    quantidade_fios += 2
-                else:
-                    quantidade_fios += 1
+                areas.append(area)
                 
+        quantidade_fios = 0
+        print("Areas: ", areas)
+        
+        areas_median = np.mean(areas)
+        areas_more_than_median = [area for area in areas if area > areas_median]
+        areas_more_than_median_mean = sum(areas_more_than_median) / len(areas_more_than_median)
+        
+        for i in range(0, len(areas_more_than_median)):
+            if areas_more_than_median[i] > areas_more_than_median_mean:
+                quantidade_fios += math.ceil(areas_more_than_median[i] / areas_more_than_median_mean)
+            else:
+                quantidade_fios += 1
+                
+            
         self.hair_number = quantidade_fios
         
     def resize(self, factor):
@@ -103,6 +115,7 @@ class HairCounter():
         self.find_bigger_square()
         self.get_contours()
         self.count_hair()   
+        # self.show()
         
 class Point():
     def __init__(self, x=0, y=0):

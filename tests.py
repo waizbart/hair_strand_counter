@@ -4,7 +4,7 @@ import numpy
 
 
 def process_img():
-    img = numpy.array(Image.open('./images/7.png'))
+    img = numpy.array(Image.open('./images/6.png'))
     
     hair_counter = HairCounter(img)
     hair_counter.run()
