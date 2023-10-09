@@ -2,6 +2,7 @@ import cv2 as cv
 import numpy as np
 import matplotlib.pyplot as plt
 import math
+import base64
 class HairCounter():
     def __init__(self, image):
         self.image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
@@ -47,13 +48,12 @@ class HairCounter():
                 centro_x = int(momentos['m10'] / momentos['m00'])
                 centro_y = int(momentos['m01'] / momentos['m00'])
 
-                cv.drawContours(self.image, [contorno], -1, (0, 255, 0), 2)
-                cv.putText(self.image, f"{area:.2f}", (centro_x, centro_y), cv.FONT_ITALIC, 0.2, (0, 0, 255), 1)
+                cv.drawContours(self.image, [contorno], -1, (138, 0, 151), 2)
+                # cv.putText(self.image, f"{area:.2f}", (centro_x, centro_y), cv.FONT_ITALIC, 0.2, (0, 0, 255), 1)
                 
                 areas.append(area)
                 
         quantidade_fios = 0
-        print("Areas: ", areas)
         
         areas_median = np.mean(areas)
         areas_more_than_median = [area for area in areas if area > areas_median]
@@ -106,6 +106,10 @@ class HairCounter():
             'x2': self.image.shape[1],
             'y2': self.image.shape[0]
         }
+
+    def getBase64Image(self):
+        _, buffer = cv.imencode('.png', self.image)
+        return base64.b64encode(buffer).decode('utf-8')
     
     def run(self):
         self.gama_correction(0.5)
@@ -114,7 +118,8 @@ class HairCounter():
         self.erode()
         self.find_bigger_square()
         self.get_contours()
-        self.count_hair()   
+        self.count_hair() 
+        self.getBase64Image()  
         # self.show()
         
 class Point():
